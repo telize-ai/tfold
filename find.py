@@ -1,8 +1,11 @@
 import os
+
+import matplotlib;
 import numpy as np
 import tensorflow as tf
 from PIL import Image
-import matplotlib; matplotlib.use('Agg')
+
+matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 from object_detection.utils import ops as utils_ops
 from object_detection.utils import label_map_util
@@ -21,9 +24,6 @@ with detection_graph.as_default():
 
 category_index = label_map_util.create_category_index_from_labelmap(
     PATH_TO_LABELS, use_display_name=True)
-
-
-# import ipdb; ipdb.set_trace()
 
 
 def load_image_into_numpy_array(img):

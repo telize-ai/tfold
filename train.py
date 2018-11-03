@@ -1,12 +1,24 @@
+from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from __future__ import absolute_import
 
+import functools
 import io
-import tensorflow as tf
+import os
 
+import tensorflow as tf
 from PIL import Image
+
+from config.config import LabelMapConfig, DetectionConfig
+from object_detection.exceptions import ModelDirectoryExists
+from object_detection import trainer
+from object_detection.builders import dataset_builder, model_builder
+from object_detection.utils import config_util
 from object_detection.utils import dataset_util
+
+DIR = os.path.abspath(os.path.dirname(__file__))
+MODEL_CHECKPOINT = os.path.join(DIR, 'data', 'model.ckpt')
+OUTPUT = os.path.join(DIR, 'builds')
 
 
 def create_tf_example(sample):
@@ -78,33 +90,152 @@ def write_tf_records(output_file, samples):
 
 
 class Trainer(object):
-    def __init__(self, work_dir=None):
-        self.work_dir = work_dir
+    def __init__(self, model_name=None, model_dir=None, model_checkpoint=MODEL_CHECKPOINT):
+        self.model_name = model_name
 
-    def add_train_sample(self):
-        pass
+        if model_dir:
+            self.model_dir = model_dir
+        else:
+            self.model_dir = os.path.join(OUTPUT, self.model_name)
 
-    def add_test_sample(self):
-        pass
+        self.label_map_config_path = os.path.join(self.model_dir, 'label_map.config')
+        self.object_detection_config_path = os.path.join(self.model_dir, 'object_detection.config')
+        self.train_input_path = os.path.join(self.model_dir, 'train.record')
+        self.eval_input_path = os.path.join(self.model_dir, 'eval.record')
 
-    def train(self):
-        pass
+        self.model_checkpoint = model_checkpoint
 
+        self.classes = {}
+        self.train_samples = []
+        self.eval_samples = []
 
-if __name__ == '__main__':
-    obs_samples = [
-        {
-            "filename": "test_images/image1.jpg",
-            "boxes": [
+    def prepare(self):
+        if os.path.exists(self.model_dir):
+            raise ModelDirectoryExists
+
+        os.mkdir(self.model_dir)
+
+        label_map_config = LabelMapConfig(items=self.items)
+        label_map_config.write(self.label_map_config_path)
+
+        object_detection_config = DetectionConfig(
+            num_classes=self.num_classes,
+            fine_tune_checkpoint=self.model_checkpoint,
+            train_input_path=self.train_input_path,
+            eval_input_path=self.eval_input_path
+        )
+        object_detection_config.write(self.object_detection_config_path)
+        write_tf_records(self.train_input_path, self.train_samples)
+        write_tf_records(self.eval_input_path, self.eval_samples)
+
+    @property
+    def num_classes(self):
+        return len(self.train_samples)
+
+    @property
+    def items(self):
+        _items = []
+        for class_item in self.classes:
+            _items.append({
+                'name': class_item['class_text'].lower(),
+                'id': class_item['class_int'],
+                'display_name': class_item['class_text']
+            })
+        return _items
+
+    def get_or_create_class(self, class_text):
+        if class_text not in self.classes:
+            classes_len = len(self.classes)
+            self.classes['class_text'] = classes_len + 1
+        return self.classes['class_text']
+
+    def add_train_sample(self, filename, boxes):
+        """
+        :param filename: "test_images/image1.jpg",
+        :param boxes: [
                 {
                     "xmin": 10,
                     "xmax": 20,
                     "ymin": 10,
                     "ymax": 20,
-                    "class_text": "test",
-                    "class_int": 1
+                    "class_text": "test"
                 }
             ]
-        }
-    ]
-    write_tf_records('./test.tf', obs_samples)
+        """
+        for box in boxes:
+            box['class_int'] = self.get_or_create_class(box['class_text'])
+        self.train_samples.append({'filename': filename, 'boxes': boxes})
+
+    def add_eval_sample(self, filename, boxes):
+        """
+        :param filename: "test_images/image1.jpg",
+        :param boxes: [
+                {
+                    "xmin": 10,
+                    "xmax": 20,
+                    "ymin": 10,
+                    "ymax": 20,
+                    "class_text": "test"
+                }
+            ]
+        """
+        for box in boxes:
+            box['class_int'] = self.get_or_create_class(box['class_text'])
+        self.eval_samples.append({'filename': filename, 'boxes': boxes})
+
+    def start(self):
+        configs = config_util.get_configs_from_pipeline_file(self.object_detection_config_path)
+        model_config = configs['model']
+        train_config = configs['train_config']
+        input_config = configs['train_input_config']
+
+        model_fn = functools.partial(
+            model_builder.build,
+            model_config=model_config,
+            is_training=True)
+
+        def get_next(config):
+            return dataset_builder.make_initializable_iterator(
+                dataset_builder.build(config)).get_next()
+
+        create_input_dict_fn = functools.partial(get_next, input_config)
+
+        ps_tasks = 0
+        worker_replicas = 1
+        worker_job_name = 'lonely_worker'
+        task = 0
+        is_chief = True
+        master = ''
+        num_clones = 1
+        clone_on_cpu = False
+        graph_rewriter_fn = None
+
+        trainer.train(
+            create_input_dict_fn,
+            model_fn,
+            train_config,
+            master,
+            task,
+            num_clones,
+            worker_replicas,
+            clone_on_cpu,
+            ps_tasks,
+            worker_job_name,
+            is_chief,
+            self.model_dir,
+            graph_hook_fn=graph_rewriter_fn
+        )
+
+
+if __name__ == '__main__':
+    """
+    The flow:
+        train = Train(mode_name='brands', model_dir='./my_models/brands')
+        for filename, boxes in train_samples:
+            train.add_train_sample(filename, boxes)
+        for filename, boxes in eval_samples:
+            train.add_eval_sample(filename, boxes)
+        
+        train.prepare()
+        train.start()
+    """
