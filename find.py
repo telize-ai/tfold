@@ -1,7 +1,5 @@
 import os
-import tarfile
 import numpy as np
-import six.moves.urllib as urllib
 import tensorflow as tf
 from PIL import Image
 import matplotlib; matplotlib.use('Agg')
@@ -87,9 +85,9 @@ def run_inference_for_single_image(img, graph):
 
 
 if __name__ == '__main__':
+    TEST_IMAGE_PATHS = [os.path.join('test_images', 'image{}.jpg'.format(i)) for i in
+                        range(1, 3)]
     for image_path in TEST_IMAGE_PATHS:
-        TEST_IMAGE_PATHS = [os.path.join('test_images', 'image{}.jpg'.format(i)) for i in
-                            range(1, 3)]
         image = Image.open(image_path)
         # the array based representation of the image will be used later in order to prepare the
         # result image with boxes and labels on it.
@@ -112,4 +110,3 @@ if __name__ == '__main__':
         plt.figure(figsize=IMAGE_SIZE)
         plt.imshow(image_np)
         plt.savefig("{}.png".format(image_path))
-
