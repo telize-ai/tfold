@@ -11,8 +11,8 @@ from object_detection.utils import ops as utils_ops
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
 
-PATH_TO_FROZEN_GRAPH = os.path.join('data', 'frozen_inference_graph.pb')
-PATH_TO_LABELS = os.path.join('data', 'mscoco_label_map.pbtxt')
+PATH_TO_FROZEN_GRAPH = 'tmp/motan/saved_model/frozen_inference_graph.pb'
+PATH_TO_LABELS = 'tmp/motan/label_map.config'
 
 detection_graph = tf.Graph()
 with detection_graph.as_default():
@@ -85,8 +85,8 @@ def run_inference_for_single_image(img, graph):
 
 
 if __name__ == '__main__':
-    TEST_IMAGE_PATHS = [os.path.join('test_images', 'image{}.jpg'.format(i)) for i in
-                        range(1, 3)]
+    TEST_IMAGE_PATHS = [os.path.join('test_images', 'motan_{}.jpeg'.format(i)) for i in
+                        range(1, 12)]
     for image_path in TEST_IMAGE_PATHS:
         image = Image.open(image_path)
         # the array based representation of the image will be used later in order to prepare the

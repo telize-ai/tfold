@@ -2,6 +2,8 @@ import os
 
 from jinja2 import Template
 
+DIR = os.path.dirname(__file__)
+
 
 class Config(object):
     TEMPLATE = None
@@ -18,8 +20,8 @@ class Config(object):
 
 
 class LabelMapConfig(Config):
-    TEMPLATE = os.path.join('templates', 'label_map.config')
+    TEMPLATE = os.path.join(DIR, 'templates', 'label_map.config')
 
 
 class DetectionConfig(Config):
-    TEMPLATE = os.path.join('templates', 'object_detection.config')
+    TEMPLATE = os.path.join(DIR, 'templates', 'object_detection.config')

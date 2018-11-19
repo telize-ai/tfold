@@ -17,9 +17,10 @@ from object_detection.utils import config_util
 from object_detection.utils import dataset_util
 
 DIR = os.path.abspath(os.path.dirname(__file__))
-MODEL_CHECKPOINT = os.path.join(DIR, 'data', 'model.ckpt')
+MODEL_CHECKPOINT = os.path.join(DIR, 'data', 'checkpoint', 'model.ckpt')
 OUTPUT = os.path.join(DIR, 'builds')
-
+# NUM_STEPS can vary fro 10k to 300k, to provide acceptable results.
+NUM_STEPS = 20000
 
 def create_tf_example(sample):
     with tf.gfile.GFile(sample['filename'], 'rb') as fid:
@@ -122,7 +123,9 @@ class Trainer(object):
             num_classes=self.num_classes,
             fine_tune_checkpoint=self.model_checkpoint,
             train_input_path=self.train_input_path,
-            eval_input_path=self.eval_input_path
+            eval_input_path=self.eval_input_path,
+            label_map_path=self.label_map_config_path,
+            num_steps=NUM_STEPS
         )
         object_detection_config.write(self.object_detection_config_path)
         write_tf_records(self.train_input_path, self.train_samples)
@@ -130,24 +133,24 @@ class Trainer(object):
 
     @property
     def num_classes(self):
-        return len(self.train_samples)
+        return len(self.classes)
 
     @property
     def items(self):
         _items = []
-        for class_item in self.classes:
+        for class_name, class_id in self.classes.items():
             _items.append({
-                'name': class_item['class_text'].lower(),
-                'id': class_item['class_int'],
-                'display_name': class_item['class_text']
+                'name': class_name.lower(),
+                'id': class_id,
+                'display_name': class_name
             })
         return _items
 
     def get_or_create_class(self, class_text):
         if class_text not in self.classes:
             classes_len = len(self.classes)
-            self.classes['class_text'] = classes_len + 1
-        return self.classes['class_text']
+            self.classes[class_text] = classes_len + 1
+        return self.classes[class_text]
 
     def add_train_sample(self, filename, boxes):
         """
@@ -179,6 +182,7 @@ class Trainer(object):
                 }
             ]
         """
+        print(boxes)
         for box in boxes:
             box['class_int'] = self.get_or_create_class(box['class_text'])
         self.eval_samples.append({'filename': filename, 'boxes': boxes})
@@ -226,16 +230,37 @@ class Trainer(object):
             graph_hook_fn=graph_rewriter_fn
         )
 
-
 if __name__ == '__main__':
     """
-    The flow:
-        train = Train(mode_name='brands', model_dir='./my_models/brands')
-        for filename, boxes in train_samples:
-            train.add_train_sample(filename, boxes)
-        for filename, boxes in eval_samples:
-            train.add_eval_sample(filename, boxes)
-        
-        train.prepare()
-        train.start()
-    """
+       The flow:
+           train = Train(mode_name='brands', model_dir='./my_models/brands')
+           for filename, boxes in train_samples:
+               train.add_train_sample(filename, boxes)
+           for filename, boxes in eval_samples:
+               train.add_eval_sample(filename, boxes)
+
+           train.prepare()
+           train.start()
+       """
+
+    import json
+
+    data_dir = '../telize_app/tmp/motan'
+    json_data = open(os.path.join(data_dir, 'samples.json')).read()
+
+    samples = json.loads(json_data)
+
+    train = Trainer(model_name='motan', model_dir='tmp/motan')
+
+    for sample in samples['train']:
+        filename = os.path.join(data_dir, sample['filename'])
+        train.add_train_sample(filename, sample['boxes'])
+
+    for sample in samples['eval']:
+        filename = os.path.join(data_dir, sample['filename'])
+        train.add_eval_sample(filename, sample['boxes'])
+
+    train.prepare()
+
+    train.start()
+
