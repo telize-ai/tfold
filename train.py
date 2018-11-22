@@ -5,9 +5,16 @@ from __future__ import print_function
 import functools
 import io
 import os
+import glob
 
 import tensorflow as tf
 from PIL import Image
+
+from google.protobuf import text_format
+from object_detection import exporter
+from object_detection.protos import pipeline_pb2
+
+slim = tf.contrib.slim
 
 from config.config import LabelMapConfig, DetectionConfig
 from object_detection.exceptions import ModelDirectoryExists
@@ -20,74 +27,7 @@ DIR = os.path.abspath(os.path.dirname(__file__))
 MODEL_CHECKPOINT = os.path.join(DIR, 'data', 'checkpoint', 'model.ckpt')
 OUTPUT = os.path.join(DIR, 'builds')
 # NUM_STEPS can vary fro 10k to 300k, to provide acceptable results.
-NUM_STEPS = 20000
-
-def create_tf_example(sample):
-    with tf.gfile.GFile(sample['filename'], 'rb') as fid:
-        encoded_jpg = fid.read()
-    encoded_jpg_io = io.BytesIO(encoded_jpg)
-    image = Image.open(encoded_jpg_io)
-    width, height = image.size
-
-    filename = sample['filename'].encode('utf8')
-    image_format = b'jpg'
-    xmins = []
-    xmaxs = []
-    ymins = []
-    ymaxs = []
-    classes_text = []
-    classes = []
-
-    for box in sample['boxes']:
-        xmins.append(box['xmin'] / width)
-        xmaxs.append(box['xmax'] / width)
-        ymins.append(box['ymin'] / height)
-        ymaxs.append(box['ymax'] / height)
-        classes_text.append(box['class_text'].encode('utf8'))
-        classes.append(box['class_int'])
-
-    tf_example = tf.train.Example(features=tf.train.Features(feature={
-        'image/height': dataset_util.int64_feature(height),
-        'image/width': dataset_util.int64_feature(width),
-        'image/filename': dataset_util.bytes_feature(filename),
-        'image/source_id': dataset_util.bytes_feature(filename),
-        'image/encoded': dataset_util.bytes_feature(encoded_jpg),
-        'image/format': dataset_util.bytes_feature(image_format),
-        'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
-        'image/object/bbox/xmax': dataset_util.float_list_feature(xmaxs),
-        'image/object/bbox/ymin': dataset_util.float_list_feature(ymins),
-        'image/object/bbox/ymax': dataset_util.float_list_feature(ymaxs),
-        'image/object/class/text': dataset_util.bytes_list_feature(classes_text),
-        'image/object/class/label': dataset_util.int64_list_feature(classes),
-    }))
-    return tf_example
-
-
-def write_tf_records(output_file, samples):
-    """
-    samples = [
-        {
-            filename: str,
-            boxes: [
-                {
-                    xmin: int,
-                    xmax: int,
-                    ymin: int,
-                    ymax: int,
-                    class_text: str,
-                    class_int: int
-                },
-                ...
-            ]
-        },
-        ...
-    ]
-    """
-    writer = tf.python_io.TFRecordWriter(output_file)
-    for sample in samples:
-        tf_example = create_tf_example(sample)
-        writer.write(tf_example.SerializeToString())
-    writer.close()
+NUM_STEPS = 50000
 
 
 class Trainer(object):
@@ -128,8 +68,8 @@ class Trainer(object):
             num_steps=NUM_STEPS
         )
         object_detection_config.write(self.object_detection_config_path)
-        write_tf_records(self.train_input_path, self.train_samples)
-        write_tf_records(self.eval_input_path, self.eval_samples)
+        self.write_tf_records(self.train_input_path, self.train_samples)
+        self.write_tf_records(self.eval_input_path, self.eval_samples)
 
     @property
     def num_classes(self):
@@ -187,6 +127,73 @@ class Trainer(object):
             box['class_int'] = self.get_or_create_class(box['class_text'])
         self.eval_samples.append({'filename': filename, 'boxes': boxes})
 
+    @staticmethod
+    def create_tf_example(sample):
+        with tf.gfile.GFile(sample['filename'], 'rb') as fid:
+            encoded_jpg = fid.read()
+        encoded_jpg_io = io.BytesIO(encoded_jpg)
+        image = Image.open(encoded_jpg_io)
+        width, height = image.size
+        filename = sample['filename'].encode('utf8')
+        image_format = b'jpg'
+        xmins = []
+        xmaxs = []
+        ymins = []
+        ymaxs = []
+        classes_text = []
+        classes = []
+
+        for box in sample['boxes']:
+            xmins.append(box['xmin'] / width)
+            xmaxs.append(box['xmax'] / width)
+            ymins.append(box['ymin'] / height)
+            ymaxs.append(box['ymax'] / height)
+            classes_text.append(box['class_text'].encode('utf8'))
+            classes.append(box['class_int'])
+
+        tf_example = tf.train.Example(features=tf.train.Features(feature={
+            'image/height': dataset_util.int64_feature(height),
+            'image/width': dataset_util.int64_feature(width),
+            'image/filename': dataset_util.bytes_feature(filename),
+            'image/source_id': dataset_util.bytes_feature(filename),
+            'image/encoded': dataset_util.bytes_feature(encoded_jpg),
+            'image/format': dataset_util.bytes_feature(image_format),
+            'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
+            'image/object/bbox/xmax': dataset_util.float_list_feature(xmaxs),
+            'image/object/bbox/ymin': dataset_util.float_list_feature(ymins),
+            'image/object/bbox/ymax': dataset_util.float_list_feature(ymaxs),
+            'image/object/class/text': dataset_util.bytes_list_feature(classes_text),
+            'image/object/class/label': dataset_util.int64_list_feature(classes),
+        }))
+        return tf_example
+
+    @staticmethod
+    def write_tf_records(output_file, samples):
+        """
+        samples = [
+            {
+                filename: str,
+                boxes: [
+                    {
+                        xmin: int,
+                        xmax: int,
+                        ymin: int,
+                        ymax: int,
+                        class_text: str,
+                        class_int: int
+                    },
+                    ...
+                ]
+            },
+            ...
+        ]
+        """
+        writer = tf.python_io.TFRecordWriter(output_file)
+        for sample in samples:
+            tf_example = Trainer.create_tf_example(sample)
+            writer.write(tf_example.SerializeToString())
+        writer.close()
+
     def start(self):
         configs = config_util.get_configs_from_pipeline_file(self.object_detection_config_path)
         model_config = configs['model']
@@ -214,21 +221,52 @@ class Trainer(object):
         clone_on_cpu = False
         graph_rewriter_fn = None
 
-        trainer.train(
-            create_input_dict_fn,
-            model_fn,
-            train_config,
-            master,
-            task,
-            num_clones,
-            worker_replicas,
-            clone_on_cpu,
-            ps_tasks,
-            worker_job_name,
-            is_chief,
-            self.model_dir,
-            graph_hook_fn=graph_rewriter_fn
+        try:
+            trainer.train(
+                create_input_dict_fn,
+                model_fn,
+                train_config,
+                master,
+                task,
+                num_clones,
+                worker_replicas,
+                clone_on_cpu,
+                ps_tasks,
+                worker_job_name,
+                is_chief,
+                self.model_dir,
+                graph_hook_fn=graph_rewriter_fn
+            )
+        except KeyboardInterrupt:
+            pass
+
+        self.export_inference()
+
+    def get_checkpoint(self):
+        checkpoint_prefix = glob.glob(self.model_dir + '/model.ckpt-*.index')[-1]
+        checkpoint_prefix = checkpoint_prefix.replace('.index', '')
+        return checkpoint_prefix
+
+    def export_inference(self):
+
+        model_config = os.path.join(self.model_dir, 'object_detection.config')
+        checkpoint_prefix = self.get_checkpoint()
+        pipeline_config = pipeline_pb2.TrainEvalPipelineConfig()
+        output_dir = os.path.join(self.model_dir, 'build')
+        write_inference_graph = False
+        with tf.gfile.GFile(model_config, 'r') as f:
+            text_format.Merge(f.read(), pipeline_config)
+
+        input_shape = None
+        exporter.export_inference_graph(
+            input_type='image_tensor',
+            pipeline_config=pipeline_config,
+            trained_checkpoint_prefix=checkpoint_prefix,
+            output_directory=output_dir,
+            input_shape=input_shape,
+            write_inference_graph=write_inference_graph
         )
+
 
 if __name__ == '__main__':
     """
@@ -245,12 +283,12 @@ if __name__ == '__main__':
 
     import json
 
-    data_dir = '../telize_app/tmp/motan'
-    json_data = open(os.path.join(data_dir, 'samples.json')).read()
+    data_dir = '../telize_app/tmp/export'
 
+    json_data = open(os.path.join(data_dir, 'samples.json')).read()
     samples = json.loads(json_data)
 
-    train = Trainer(model_name='motan', model_dir='tmp/motan')
+    train = Trainer(model_name='sport_brands', model_dir='tmp/sport_brands')
 
     for sample in samples['train']:
         filename = os.path.join(data_dir, sample['filename'])
@@ -261,6 +299,5 @@ if __name__ == '__main__':
         train.add_eval_sample(filename, sample['boxes'])
 
     train.prepare()
-
     train.start()
 
