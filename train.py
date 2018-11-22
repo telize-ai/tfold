@@ -3,30 +3,30 @@ from __future__ import division
 from __future__ import print_function
 
 import functools
+import glob
 import io
 import os
-import glob
 
 import tensorflow as tf
 from PIL import Image
-
 from google.protobuf import text_format
-from object_detection import exporter
-from object_detection.protos import pipeline_pb2
-
-slim = tf.contrib.slim
 
 from config.config import LabelMapConfig, DetectionConfig
-from object_detection.exceptions import ModelDirectoryExists
+from object_detection import exporter
 from object_detection import trainer
 from object_detection.builders import dataset_builder, model_builder
+from object_detection.exceptions import ModelDirectoryExists
+from object_detection.protos import pipeline_pb2
 from object_detection.utils import config_util
 from object_detection.utils import dataset_util
+
+slim = tf.contrib.slim
 
 DIR = os.path.abspath(os.path.dirname(__file__))
 MODEL_CHECKPOINT = os.path.join(DIR, 'data', 'checkpoint', 'model.ckpt')
 OUTPUT = os.path.join(DIR, 'builds')
-# NUM_STEPS can vary fro 10k to 300k, to provide acceptable results.
+
+# Can vary fro 10k to 300k, to provide acceptable results.
 NUM_STEPS = 50000
 
 
@@ -300,4 +300,3 @@ if __name__ == '__main__':
 
     train.prepare()
     train.start()
-
