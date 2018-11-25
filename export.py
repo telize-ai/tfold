@@ -103,11 +103,11 @@ slim = tf.contrib.slim
 def main(_):
 
     input_type = 'image_tensor'
-    model_dir = 'tmp/motan'
-    model_config = os.path.join(model_dir, 'object_detection.config')
-    checkpoint_prefix = os.path.join(model_dir, 'model.ckpt-20000')
+    model_dir = 'tmp/sport_brands'
+    model_config = os.path.join(model_dir, 'ssd_object_detection.config')
+    checkpoint_prefix = os.path.join(model_dir, 'model.ckpt-94195')
     pipeline_config = pipeline_pb2.TrainEvalPipelineConfig()
-    output_dir = os.path.join(model_dir, 'saved_model')
+    output_dir = os.path.join(model_dir, 'build')
     write_inference_graph = False
     with tf.gfile.GFile(model_config, 'r') as f:
         text_format.Merge(f.read(), pipeline_config)

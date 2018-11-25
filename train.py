@@ -23,16 +23,19 @@ from object_detection.utils import dataset_util
 slim = tf.contrib.slim
 
 DIR = os.path.abspath(os.path.dirname(__file__))
-MODEL_CHECKPOINT = os.path.join(DIR, 'data', 'checkpoint', 'model.ckpt')
+SSD_MODEL_CHECKPOINT = os.path.join(DIR, 'data', 'ssd_checkpoint', 'model.ckpt')
+FASTER_MODEL_CHECKPOINT = os.path.join(DIR, 'data', 'faster_checkpoint', 'model.ckpt')
 OUTPUT = os.path.join(DIR, 'builds')
 
 # Can vary fro 10k to 300k, to provide acceptable results.
-NUM_STEPS = 50000
+NUM_STEPS = 20000
 
 
 class Trainer(object):
-    def __init__(self, model_name=None, model_dir=None, model_checkpoint=MODEL_CHECKPOINT):
+    def __init__(self, model_name=None, model_dir=None, model_type='ssd'):
+
         self.model_name = model_name
+        self.model_type = model_type
 
         if model_dir:
             self.model_dir = model_dir
@@ -44,7 +47,12 @@ class Trainer(object):
         self.train_input_path = os.path.join(self.model_dir, 'train.record')
         self.eval_input_path = os.path.join(self.model_dir, 'eval.record')
 
-        self.model_checkpoint = model_checkpoint
+        if model_type == 'ssd':
+            self.model_checkpoint = SSD_MODEL_CHECKPOINT
+        elif model_type == 'faster':
+            self.model_checkpoint = FASTER_MODEL_CHECKPOINT
+        else:
+            self.model_checkpoint = None
 
         self.classes = {}
         self.train_samples = []
@@ -60,6 +68,7 @@ class Trainer(object):
         label_map_config.write(self.label_map_config_path)
 
         object_detection_config = DetectionConfig(
+            model_type=self.model_type,
             num_classes=self.num_classes,
             fine_tune_checkpoint=self.model_checkpoint,
             train_input_path=self.train_input_path,
@@ -144,6 +153,13 @@ class Trainer(object):
         classes = []
 
         for box in sample['boxes']:
+            if (
+                    box['xmin'] / width > 1.1 or
+                    box['xmax'] / width > 1.1 or
+                    box['ymin'] / height > 1.1 or
+                    box['ymax'] / height > 1.1
+            ):
+                return
             xmins.append(box['xmin'] / width)
             xmaxs.append(box['xmax'] / width)
             ymins.append(box['ymin'] / height)
@@ -191,7 +207,8 @@ class Trainer(object):
         writer = tf.python_io.TFRecordWriter(output_file)
         for sample in samples:
             tf_example = Trainer.create_tf_example(sample)
-            writer.write(tf_example.SerializeToString())
+            if tf_example:
+                writer.write(tf_example.SerializeToString())
         writer.close()
 
     def start(self):
@@ -288,7 +305,11 @@ if __name__ == '__main__':
     json_data = open(os.path.join(data_dir, 'samples.json')).read()
     samples = json.loads(json_data)
 
-    train = Trainer(model_name='sport_brands', model_dir='tmp/sport_brands')
+    train = Trainer(
+        model_name='sport_brands',
+        model_dir='tmp/sport_brands',
+        model_type='faster'
+    )
 
     for sample in samples['train']:
         filename = os.path.join(data_dir, sample['filename'])

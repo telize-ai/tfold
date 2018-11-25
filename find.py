@@ -1,18 +1,20 @@
 import os
 
-import matplotlib;
+import matplotlib
+
+matplotlib.use('Agg')
+
 import numpy as np
 import tensorflow as tf
 from PIL import Image
 
-matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 from object_detection.utils import ops as utils_ops
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
 
-PATH_TO_FROZEN_GRAPH = 'tmp/motan/saved_model/frozen_inference_graph.pb'
-PATH_TO_LABELS = 'tmp/motan/label_map.config'
+PATH_TO_FROZEN_GRAPH = '/home/marius/Projects/tfold/tmp/sport_brands/build/frozen_inference_graph.pb'
+PATH_TO_LABELS = '/home/marius/Projects/tfold/tmp/sport_brands/label_map.config'
 
 detection_graph = tf.Graph()
 with detection_graph.as_default():
@@ -30,10 +32,6 @@ def load_image_into_numpy_array(img):
     (im_width, im_height) = img.size
     return np.array(img.getdata()).reshape(
         (im_height, im_width, 3)).astype(np.uint8)
-
-
-# Size, in inches, of the output images.
-IMAGE_SIZE = (12, 8)
 
 
 def run_inference_for_single_image(img, graph):
@@ -85,18 +83,24 @@ def run_inference_for_single_image(img, graph):
 
 
 if __name__ == '__main__':
-    TEST_IMAGE_PATHS = [os.path.join('test_images', 'motan_{}.jpeg'.format(i)) for i in
-                        range(1, 12)]
+    TEST_IMAGE_PATHS = [os.path.join('test_images', 'motan_{}.jpeg'.format(i)) for i in range(1, 12)]
+
+    # Size, in inches, of the output images.
+    IMAGE_SIZE = (12, 8)
+
     for image_path in TEST_IMAGE_PATHS:
         image = Image.open(image_path)
+
         # the array based representation of the image will be used later in order to prepare the
         # result image with boxes and labels on it.
         image_np = load_image_into_numpy_array(image)
+
         # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
         image_np_expanded = np.expand_dims(image_np, axis=0)
+
         # Actual detection.
         detections = run_inference_for_single_image(image_np, detection_graph)
-        print("DETECTIONS {}".format(detections))
+
         # Visualization of the results of a detection.
         vis_util.visualize_boxes_and_labels_on_image_array(
             image_np,
@@ -106,6 +110,7 @@ if __name__ == '__main__':
             category_index,
             instance_masks=detections.get('detection_masks'),
             use_normalized_coordinates=True,
+            min_score_thresh=0.1,
             line_thickness=8)
         plt.figure(figsize=IMAGE_SIZE)
         plt.imshow(image_np)

@@ -24,4 +24,9 @@ class LabelMapConfig(Config):
 
 
 class DetectionConfig(Config):
-    TEMPLATE = os.path.join(DIR, 'templates', 'object_detection.config')
+    def __init__(self, **kwargs):
+        super(DetectionConfig, self).__init__(**kwargs)
+        if self.vars.get('model_type') == 'ssd':
+            self.TEMPLATE = os.path.join(DIR, 'templates', 'ssd_object_detection.config')
+        elif self.vars.get('model_type') == 'faster':
+            self.TEMPLATE = os.path.join(DIR, 'templates', 'faster_object_detection.config')
