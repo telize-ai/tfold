@@ -15,8 +15,6 @@ install_requires = [
 try:
     import tensorflow
 except ImportError:
-    pass
-else:
     install_requires.append('tensorflow==1.11.0')
 
 setuptools.setup(

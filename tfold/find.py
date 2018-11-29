@@ -38,11 +38,11 @@ class Detector(object):
     def detect_in_np(self, image_np):
 
         # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
-        image_np_expanded = np.expand_dims(image_np, axis=0)
+        # image_np_expanded = np.expand_dims(image_np, axis=0)
 
         # Actual detection.
         # detections = run_inference_for_single_image(image_np, detection_graph)
-        detections = self.run_inference_for_single_image(image_np_expanded)
+        detections = self.run_inference_for_single_image(image_np)
         return detections
 
     @property
@@ -136,7 +136,7 @@ class Detector(object):
             min_score_thresh=threshold,
             line_thickness=8)
         plt.figure(figsize=image_size)
-        plt.imshow(self.detector.image_np)
+        plt.imshow(self.image_np)
         plt.savefig(output)
         return output
 
