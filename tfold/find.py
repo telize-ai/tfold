@@ -138,16 +138,20 @@ class Detector(object):
         return output
 
 
-if __name__ == '__main__':
-    TEST_IMAGE_PATHS = [os.path.join('test_images', 'motan_{}.jpeg'.format(i)) for i in range(1, 12)]
+def main():
+    test_images = [os.path.join('test_images', 'motan_{}.jpeg'.format(i)) for i in range(1, 12)]
 
     detector = Detector(
         graph_path='/home/marius/Projects/tfold/tmp/bak-sport_bransd-6/build/frozen_inference_graph.pb',
         label_path='/home/marius/Projects/tfold/tmp/bak-sport_bransd-6/label_map.config'
     )
 
-    for image_path in TEST_IMAGE_PATHS:
+    for image_path in test_images:
         detections = detector.detect_in_file(image_path)
 
         # Visualization of the results of a detection.
         detector.draw_vis(threshold=0.4)
+
+
+if __name__ == '__main__':
+    main()

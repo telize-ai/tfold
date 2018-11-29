@@ -11,7 +11,7 @@ import tensorflow as tf
 from PIL import Image
 from google.protobuf import text_format
 
-from config.config import LabelMapConfig, DetectionConfig
+from tfold.config.config import LabelMapConfig, DetectionConfig
 from tfold.object_detection import exporter
 from tfold.object_detection import trainer
 from tfold.object_detection.builders import dataset_builder, model_builder
@@ -287,18 +287,18 @@ class Trainer(object):
         )
 
 
-if __name__ == '__main__':
+def main():
     """
-       The flow:
-           train = Train(mode_name='brands', model_dir='./my_models/brands')
-           for filename, boxes in train_samples:
-               train.add_train_sample(filename, boxes)
-           for filename, boxes in eval_samples:
-               train.add_eval_sample(filename, boxes)
+           The flow:
+               train = Train(mode_name='brands', model_dir='./my_models/brands')
+               for filename, boxes in train_samples:
+                   train.add_train_sample(filename, boxes)
+               for filename, boxes in eval_samples:
+                   train.add_eval_sample(filename, boxes)
 
-           train.prepare()
-           train.start()
-       """
+               train.prepare()
+               train.start()
+           """
 
     import json
 
@@ -322,3 +322,7 @@ if __name__ == '__main__':
         train.add_eval_sample(filename, sample['boxes'])
 
     train.start()
+
+
+if __name__ == '__main__':
+    main()
