@@ -33,8 +33,8 @@ json_data = open(os.path.join(data_dir, 'samples.json')).read()
 samples = json.loads(json_data)
 
 train = Trainer(
-    model_name='sport_brands',
-    model_dir='tmp/sport_brands',
+    model_name='detection_model',
+    model_dir='models/detection_model',
     model_type='faster'
 )
 
