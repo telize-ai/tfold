@@ -68,3 +68,9 @@ The `samples.json` file contains a json with the following format:
     }
 ]
 ```
+
+## Todo
+
+## Contributions
+
+If you would like to contribute please contact me at `marius@mi.www.ro`. For any other questions, please use the same address, or alternatively open an issue. I'd love to hear your thoughts, so don't heistate to write me.
