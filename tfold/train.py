@@ -212,6 +212,8 @@ class Trainer(object):
         writer.close()
 
     def start(self):
+        self.prepare()
+
         configs = config_util.get_configs_from_pipeline_file(self.object_detection_config_path)
         model_config = configs['model']
         train_config = configs['train_config']
@@ -319,5 +321,4 @@ if __name__ == '__main__':
         filename = os.path.join(data_dir, sample['filename'])
         train.add_eval_sample(filename, sample['boxes'])
 
-    train.prepare()
     train.start()

@@ -27,7 +27,7 @@ setuptools.setup(
     description="Tensorflow Object Detection",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/mariusionescu/tfold",
+    url="https://github.com/telize-ai/tfold",
     packages=setuptools.find_packages(),
     install_requires=install_requires,
     package_data={'tfold': [
