@@ -55,7 +55,7 @@ The `samples.json` file contains a json with the following format:
 [
     {
         "filename": "image.jpg",
-        boxes: [
+        "boxes": [
             {
                 "xmin": 100,
                 "xmax": 300,
