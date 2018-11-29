@@ -21,6 +21,7 @@ class Detector(object):
         self.image_path = None
         self.image_pil = None
         self.image_np = None
+        self.detections = None
 
     def detect_in_file(self, image_path):
         self.image_path = image_path
@@ -112,6 +113,8 @@ class Detector(object):
                 output_dict['detection_scores'] = output_dict['detection_scores'][0]
                 if 'detection_masks' in output_dict:
                     output_dict['detection_masks'] = output_dict['detection_masks'][0]
+
+            self.detections = output_dict
         return output_dict
 
     def draw_vis(self, output=None, threshold=0.5):
@@ -124,16 +127,16 @@ class Detector(object):
 
         vis_util.visualize_boxes_and_labels_on_image_array(
             self.image_np,
-            detections['detection_boxes'],
-            detections['detection_classes'],
-            detections['detection_scores'],
+            self.detections['detection_boxes'],
+            self.detections['detection_classes'],
+            self.detections['detection_scores'],
             self.categories,
-            instance_masks=detections.get('detection_masks'),
+            instance_masks=self.detections.get('detection_masks'),
             use_normalized_coordinates=True,
             min_score_thresh=threshold,
             line_thickness=8)
         plt.figure(figsize=image_size)
-        plt.imshow(detector.image_np)
+        plt.imshow(self.detector.image_np)
         plt.savefig(output)
         return output
 
