@@ -29,9 +29,11 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=install_requires,
     package_data={'tfold': [
-        'data/*',
-        'data/faster_checkpoint/*',
-        'data/ssd_checkpoint/*',
+        'data/*.pb',
+        'data/*.ckpt',
+        'data/*.pbtxt',
+        'data/faster_checkpoint/*.pb',
+        'data/ssd_checkpoint/*.pb',
     ]},
     classifiers=[
         "Programming Language :: Python :: 3",
