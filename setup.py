@@ -19,7 +19,7 @@ except ImportError:
 
 setuptools.setup(
     name="tfold",
-    version="0.0.1",
+    version="0.2.1",
     author="Marius Ionescu",
     author_email="marius@mi.www.ro",
     description="Tensorflow Object Detection",

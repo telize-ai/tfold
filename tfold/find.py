@@ -62,6 +62,13 @@ class Detector(object):
             self.label_path, use_display_name=True)
         return category_index
 
+    def get_class(self, class_id):
+        class_dict = self.categories.get(class_id)
+        if class_dict:
+            return class_dict['name']
+        else:
+            return 'Unknown'
+
     @staticmethod
     def load_image_into_numpy_array(img):
         (im_width, im_height) = img.size
@@ -69,6 +76,7 @@ class Detector(object):
             (im_height, im_width, 3)).astype(np.uint8)
 
     def run_inference_for_single_image(self, img):
+        (im_width, im_height) = self.image_pil.size
         with self.graph.as_default():
             with tf.Session() as sess:
                 # Get handles to input and output tensors
@@ -113,6 +121,20 @@ class Detector(object):
                 output_dict['detection_scores'] = output_dict['detection_scores'][0]
                 if 'detection_masks' in output_dict:
                     output_dict['detection_masks'] = output_dict['detection_masks'][0]
+
+                detection_boxes_normalized = []
+
+                for box in output_dict['detection_boxes']:
+                    print('BOX', box, im_width, im_height)
+                    box_normalized = (
+                        int(box[0] * im_height),
+                        int(box[1] * im_width),
+                        int(box[2] * im_height),
+                        int(box[3] * im_width)
+                    )
+                    detection_boxes_normalized.append(box_normalized)
+
+                output_dict['detection_boxes_normalized'] = detection_boxes_normalized
 
             self.detections = output_dict
         return output_dict
