@@ -22,9 +22,9 @@ import copy
 
 import tensorflow as tf
 
-from nets.mobilenet import conv_blocks as ops
-from nets.mobilenet import mobilenet
-from nets.mobilenet import mobilenet_v2
+from tfold.nets.mobilenet import conv_blocks as ops
+from tfold.nets.mobilenet import mobilenet
+from tfold.nets.mobilenet import mobilenet_v2
 
 slim = tf.contrib.slim
 

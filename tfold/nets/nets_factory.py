@@ -22,18 +22,18 @@ import functools
 
 import tensorflow as tf
 
-from nets import alexnet
-from nets import cifarnet
-from nets import inception
-from nets import lenet
-from nets import mobilenet_v1
-from nets import overfeat
-from nets import resnet_v1
-from nets import resnet_v2
-from nets import vgg
-from nets.mobilenet import mobilenet_v2
-from nets.nasnet import nasnet
-from nets.nasnet import pnasnet
+from tfold.nets import alexnet
+from tfold.nets import cifarnet
+from tfold.nets import inception
+from tfold.nets import lenet
+from tfold.nets import mobilenet_v1
+from tfold.nets import overfeat
+from tfold.nets import resnet_v1
+from tfold.nets import resnet_v2
+from tfold.nets import vgg
+from tfold.nets.mobilenet import mobilenet_v2
+from tfold.nets.nasnet import nasnet
+from tfold.nets.nasnet import pnasnet
 
 slim = tf.contrib.slim
 

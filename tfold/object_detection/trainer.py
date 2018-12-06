@@ -23,7 +23,7 @@ import functools
 
 import tensorflow as tf
 
-from deployment import model_deploy
+from tfold.deployment import model_deploy
 from tfold.object_detection.builders import optimizer_builder
 from tfold.object_detection.builders import preprocessor_builder
 from tfold.object_detection.core import batcher

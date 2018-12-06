@@ -17,7 +17,7 @@
 import numpy as np
 import tensorflow as tf
 
-from nets import mobilenet_v1
+from tfold.nets import mobilenet_v1
 from tfold.object_detection.meta_architectures import faster_rcnn_meta_arch
 from tfold.object_detection.utils import shape_utils
 

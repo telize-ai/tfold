@@ -26,8 +26,8 @@ same preprocessing, batch norm scaling, etc.
 """
 import tensorflow as tf
 
-from nets import resnet_utils
-from nets import resnet_v1
+from tfold.nets import resnet_utils
+from tfold.nets import resnet_v1
 from tfold.object_detection.meta_architectures import faster_rcnn_meta_arch
 
 slim = tf.contrib.slim

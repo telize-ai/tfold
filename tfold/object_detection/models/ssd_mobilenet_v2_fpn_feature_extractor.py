@@ -20,8 +20,8 @@ import functools
 
 import tensorflow as tf
 
-from nets.mobilenet import mobilenet
-from nets.mobilenet import mobilenet_v2
+from tfold.nets.mobilenet import mobilenet
+from tfold.nets.mobilenet import mobilenet_v2
 from tfold.object_detection.meta_architectures import ssd_meta_arch
 from tfold.object_detection.models import feature_map_generators
 from tfold.object_detection.utils import context_manager

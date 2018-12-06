@@ -19,7 +19,7 @@ except ImportError:
 
 setuptools.setup(
     name="tfold",
-    version="0.2.1",
+    version="0.2.6",
     author="Marius Ionescu",
     author_email="marius@mi.www.ro",
     description="Tensorflow Object Detection",
@@ -33,7 +33,10 @@ setuptools.setup(
         'data/*.ckpt',
         'data/*.pbtxt',
         'data/faster_checkpoint/*.pb',
+        'data/faster_checkpoint/*.ckpt.*',
         'data/ssd_checkpoint/*.pb',
+        'data/ssd_checkpoint/*.ckpt',
+        'config/templates/*.config',
     ]},
     classifiers=[
         "Programming Language :: Python :: 3",

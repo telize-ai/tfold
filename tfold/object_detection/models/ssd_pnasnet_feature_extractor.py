@@ -20,7 +20,7 @@ Based on PNASNet ImageNet model: https://arxiv.org/abs/1712.00559
 
 import tensorflow as tf
 
-from nets.nasnet import pnasnet
+from tfold.nets.nasnet import pnasnet
 from tfold.object_detection.meta_architectures import ssd_meta_arch
 from tfold.object_detection.models import feature_map_generators
 from tfold.object_detection.utils import context_manager

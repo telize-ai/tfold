@@ -125,7 +125,6 @@ class Detector(object):
                 detection_boxes_normalized = []
 
                 for box in output_dict['detection_boxes']:
-                    print('BOX', box, im_width, im_height)
                     box_normalized = (
                         int(box[0] * im_height),
                         int(box[1] * im_width),
@@ -164,18 +163,17 @@ class Detector(object):
 
 
 def main():
-    test_images = [os.path.join('test_images', 'motan_{}.jpeg'.format(i)) for i in range(1, 12)]
 
     detector = Detector(
-        graph_path='/home/marius/Projects/tfold/tmp/bak-sport_bransd-6/build/frozen_inference_graph.pb',
-        label_path='/home/marius/Projects/tfold/tmp/bak-sport_bransd-6/label_map.config'
+        graph_path='frozen_inference_graph.pb',
+        label_path='label_map.config'
     )
 
-    for image_path in test_images:
-        detections = detector.detect_in_file(image_path)
 
-        # Visualization of the results of a detection.
-        detector.draw_vis(threshold=0.4)
+    detections = detector.detect_in_file('image.jpg')
+
+    # Visualization of the results of a detection.
+    detector.draw_vis(threshold=0.4)
 
 
 if __name__ == '__main__':

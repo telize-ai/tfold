@@ -24,7 +24,7 @@ Huang et al. (https://arxiv.org/abs/1611.10012)
 
 import tensorflow as tf
 
-from nets import inception_resnet_v2
+from tfold.nets import inception_resnet_v2
 from tfold.object_detection.meta_architectures import faster_rcnn_meta_arch
 
 slim = tf.contrib.slim

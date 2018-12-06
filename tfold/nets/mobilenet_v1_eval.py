@@ -24,7 +24,7 @@ import tensorflow as tf
 from datasets import dataset_factory
 from preprocessing import preprocessing_factory
 
-from nets import mobilenet_v1
+from tfold.nets import mobilenet_v1
 
 slim = tf.contrib.slim
 
