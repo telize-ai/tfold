@@ -24,15 +24,16 @@ slim = tf.contrib.slim
 
 DIR = os.path.abspath(os.path.dirname(__file__))
 SSD_MODEL_CHECKPOINT = os.path.join(DIR, 'data', 'ssd_checkpoint', 'model.ckpt')
+SSD_MOBILE_MODEL_CHECKPOINT = os.path.join(DIR, 'data', 'ssd_mobile_checkpoint', 'model.ckpt')
 FASTER_MODEL_CHECKPOINT = os.path.join(DIR, 'data', 'faster_checkpoint', 'model.ckpt')
 OUTPUT = os.path.join(DIR, 'builds')
 
 # Can vary fro 10k to 300k, to provide acceptable results.
-NUM_STEPS = 100000
+NUM_STEPS = 200000
 
 
 class Trainer(object):
-    def __init__(self, model_name=None, model_dir=None, model_type='ssd'):
+    def __init__(self, model_name=None, model_dir=None, model_type=None, model_checkpoint=None):
 
         self.model_name = model_name
         self.model_type = model_type
@@ -47,8 +48,14 @@ class Trainer(object):
         self.train_input_path = os.path.join(self.model_dir, 'train.record')
         self.eval_input_path = os.path.join(self.model_dir, 'eval.record')
 
-        if model_type == 'ssd':
+        if model_checkpoint == 'empty':
+            self.model_checkpoint = None
+        elif model_checkpoint:
+            self.model_checkpoint = model_checkpoint
+        elif model_type == 'ssd':
             self.model_checkpoint = SSD_MODEL_CHECKPOINT
+        elif model_type == 'ssd_mobile':
+            self.model_checkpoint = SSD_MOBILE_MODEL_CHECKPOINT
         elif model_type == 'faster':
             self.model_checkpoint = FASTER_MODEL_CHECKPOINT
         else:

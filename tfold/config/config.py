@@ -30,3 +30,5 @@ class DetectionConfig(Config):
             self.TEMPLATE = os.path.join(DIR, 'templates', 'ssd_object_detection.config')
         elif self.vars.get('model_type') == 'faster':
             self.TEMPLATE = os.path.join(DIR, 'templates', 'faster_object_detection.config')
+        elif self.vars.get('model_type') == 'ssd_mobile':
+            self.TEMPLATE = os.path.join(DIR, 'templates', 'ssd_mobile_object_detection.config')
